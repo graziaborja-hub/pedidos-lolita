@@ -1,6 +1,6 @@
 // Service worker mínimo: guarda la "cáscara" de la app (logo y página) para que abra rápido.
 // Los pedidos siempre se cargan en vivo desde Google, nunca de la memoria.
-var CACHE = "pedidos-lolita-v1";
+var CACHE = "pedidos-lolita-v2";
 var ARCHIVOS = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", function(e) {

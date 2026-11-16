@@ -13,30 +13,60 @@
   <meta name="apple-mobile-web-app-title" content="Pedidos Lolita">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: #f4f4f9; overflow: hidden; }
-    iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
-    #cargando { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
-                background: #fff; font-family: Arial, sans-serif; color: #555; font-size: 15px; transition: opacity 0.3s; }
-    #cargando img { width: 140px; height: 140px; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; min-height: 100%; background: #fff; }
+    body { font-family: Arial, sans-serif; color: #333; display: flex; flex-direction: column; align-items: center;
+           justify-content: center; gap: 18px; padding: 32px 20px; min-height: 100vh; text-align: center; }
+    img { width: 150px; height: 150px; }
+    h1 { font-size: 22px; margin: 0; }
+    .boton { display: block; width: 100%; max-width: 320px; padding: 15px; border: 0; border-radius: 10px;
+             font-size: 17px; font-weight: bold; text-decoration: none; cursor: pointer; }
+    .abrir { background: #000; color: #fff; }
+    .instalar { background: #fff; color: #000; border: 2px solid #000; }
+    .ayuda { font-size: 14px; color: #666; max-width: 320px; line-height: 1.5; margin: 0; }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
-  <div id="cargando"><img src="icon-192.png" alt="Lolita Gluten Free Pastry"><div>Cargando pedidos…</div></div>
-  <iframe id="app" title="Pedidos Lolita" allow="camera; clipboard-write"></iframe>
+  <img src="icon-192.png" alt="Lolita Gluten Free Pastry">
+  <h1>Pedidos Lolita</h1>
+  <p class="ayuda" id="cargando" hidden>Abriendo pedidos…</p>
+  <a class="boton abrir" id="abrir" href="#">Abrir pedidos</a>
+  <button class="boton instalar" id="instalar" type="button" hidden>📲 Instalar app en este celular</button>
+  <p class="ayuda" id="ayudaIphone" hidden>Para instalarla en iPhone: toca el botón compartir ⬆️ y elige <b>"Agregar a inicio"</b>.</p>
+  <p class="ayuda" id="ayudaAndroid" hidden>Para instalarla: toca el menú ⋮ de Chrome y elige <b>"Instalar app"</b> o <b>"Agregar a pantalla principal"</b>.</p>
 
   <script>
-    // ⬇️ PEGA AQUÍ el link de tu app de pedidos (el que termina en /exec), entre las comillas
+    // ⬇️ Link de tu app de pedidos (el que termina en /exec)
     var LINK_APP = "https://script.google.com/macros/s/AKfycbwEDKf24TkHQFZNgjPywqPssyPQeyAerblNel6nkwuSNeLopBMsD4Mq_yT-f2nPNRdAnQ/exec";
 
-    var marco = document.getElementById('app');
-    marco.addEventListener('load', function() {
-      var c = document.getElementById('cargando');
-      c.style.opacity = 0;
-      setTimeout(function() { c.remove(); }, 300);
-    });
-    marco.src = LINK_APP;
+    document.getElementById('abrir').href = LINK_APP;
 
-    // Necesario para que el celular ofrezca "Instalar app"
+    // La app se abre directo en Google (no dentro de un marco), así funciona aunque tengas varias cuentas de Google
+    var instalada = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (instalada) {
+      document.getElementById('cargando').hidden = false;
+      document.getElementById('abrir').hidden = true;
+      location.replace(LINK_APP);
+    } else {
+      var esIphone = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      document.getElementById(esIphone ? 'ayudaIphone' : 'ayudaAndroid').hidden = false;
+    }
+
+    // Botón "Instalar app" (Android / Chrome)
+    var aviso = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      aviso = e;
+      document.getElementById('instalar').hidden = false;
+      document.getElementById('ayudaAndroid').hidden = true;
+    });
+    document.getElementById('instalar').addEventListener('click', function() {
+      if (!aviso) return;
+      aviso.prompt();
+      aviso.userChoice.then(function() { aviso = null; document.getElementById('instalar').hidden = true; });
+    });
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function() {});
     }
